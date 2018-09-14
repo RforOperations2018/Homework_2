@@ -19,7 +19,8 @@ ui <- fluidPage(
 # Layout of Basic Input          
   titlePanel("Allegheny County Jail Bookings for September "),
       tabsetPanel(
-         tabPanel("Basic Information",
+        #1st Panel for Gender and Race Information 
+        tabPanel("Basic Information",
                   fluidRow(
                     column(4,
                            wellPanel(selectInput("race", label = "Race", choices = c("Not Reported", "Asian", "Black",
@@ -28,55 +29,34 @@ ui <- fluidPage(
                                                  selected = c("Black", "White", "Hispanic"),
                                                  multiple = TRUE,
                                                  selectize = TRUE)),
-                           wellPanel(radioButtons("gender", label = "Options", choices = c("Male", "Female")))),
-                    column(8, wellPanel( plotOutput("race.info"), plotOutput("gender.info"))))),
-                  # fluidRow(
-                  #   column(4,
-                  #          wellPanel(selectInput("race", label = "Race", choices = c("Not Reported", "Asian", "Black",
-                  #                                                                    "Hispanic", "Indian", "Unknown", 
-                  #                                                                    "White", "Mixed-race"), 
-                  #                                selected = c("Black", "White", "Hispanic"),
-                  #                                multiple = TRUE,
-                  #                                selectize = TRUE)))),
-                  # column(8, offset =  4, wellPanel(plotOutput("race.info")))),
-         # tabPanel("Race",
-         #          fluidRow(
-         #            column(4,
-         #                    wellPanel(selectInput("race", label = "Race", choices = c("Not Reported", "Asian", "Black",
-         #                                                                          "Hispanic", "Indian", "Unknown", 
-         #                                                                          "White", "Mixed-race"), 
-         #                                                                          selected = c("Black", "White", "Hispanic"),
-         #                                                                            multiple = TRUE,
-         #                                                                            selectize = TRUE)))),
-         #          column(8, wellPanel(plotOutput("race.info")))),
+                           wellPanel(radioButtons("gender", label = "Options", choices = c("Male", "Female"))),
+                           wellPanel(actionButton("click", "Click to See What Happens"))),
+                   column(8, wellPanel( plotlyOutput("race.info")), 
+                             wellPanel(plotlyOutput("gender.info"))))),
+         #2nd Panel for Download Button, Action Button, and Data Table
          tabPanel("Downloads and Table",
-                   fluidRow(column(4, wellPanel(downloadButton("new.download", label = "Download New File")),
-                                      wellPanel(actionButton("click", "Click to See What Happens"))),
-                            column(8, wellPanel(renderDT("table", "Basic Data Table of September Bookings")))))
+                   fluidRow(column(4, wellPanel(downloadButton("new.download", label = "Download New File"))),
+                            column(8, wellPanel(dataTableOutput("table", width = "80%")))))
       ))
 
 
-# Define server logic required to draw a histogram
+# Define server logic required to draw two bar graphs, a data table, and a download button
 server <- function(input, output) {
-  #ddply(clean.data, ~ Race + Gender, summarize, mean = mean(Age.at.Booking))
-  #filter.data <- reactive({subset(clean.data, subset = c())})
-  #clean.data.2 <- melt(clean.data)
+  
   df.filter <- reactive ({
-    clean.data %>% filter(input$gender == Gender & input$race %in% Race)})
+    clean.data %>% filter(input$gender == Gender & Race %in% input$race)})
    
    
-    # # if (length(input$race) > 0 ) {
-    # clean.data <- subset(clean.data, race %in% input$race)}
-    # return(clean.data)})
+   
 
-  output$race.info <- renderPlot({
+  output$race.info <- renderPlotly({
     df2 <- df.filter()
-    ggplot(df2, aes(x = Race, fill = Race)) + geom_bar()})
+    ggplotly(ggplot(df2, aes(x = Race, fill = Race)) + geom_bar() + ggtitle("Arrests by Race for September"))})
 
-  output$gender.info <- renderPlot({
+  output$gender.info <- renderPlotly({
     df1 <- df.filter()
-    ggplot(df1, aes(x = Gender, fill = Gender)) + 
-      geom_bar()})
+    ggplotly(ggplot(df1, aes(x = Gender, fill = Gender)) + 
+      geom_bar()+ ggtitle("Arrests by Sex for September"))})
   
       
   
@@ -84,14 +64,17 @@ server <- function(input, output) {
     filename = function(){ 
       paste("newdownload", Sys.date(), ".csv", sep = "" )},
     content = function(file) {
-      write.csv(clean.data, file)
+      write.csv(df.filter(), file)
     })
   
   output$table <- renderDataTable({
-     clean.data
-    
-    subset(starwars, select = c(name, height, mass, birth_year, homeworld, species, films))
+    functioning.table <- df.filter()
+    subset(functioning.table, select = c(Date, Gender, Race, Age.at.Booking, Current.Age))
   })
+    observeEvent(input$click, {
+      print(paste("Hey, you clicked a button!"))
+    })
+  
 }
 
 # Run the application 
