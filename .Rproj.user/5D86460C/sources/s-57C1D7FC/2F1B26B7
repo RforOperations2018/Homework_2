@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1536878073846.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "2F1B26B7",
+    "lastKnownWriteTime" : 7594870476051609445,
+    "last_content_update" : 1536878073846,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "D01A7547",
+        "caption" : "huffington",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=huffington&cache_key=D01A7547",
+        "displayedObservations" : 8,
+        "environment" : "",
+        "object" : "huffington",
+        "preview" : 0,
+        "totalObservations" : 8,
+        "variables" : 2
+    },
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

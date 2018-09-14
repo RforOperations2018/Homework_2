@@ -1,31 +1,47 @@
+library(plyr)
 library(dplyr)
 library(plotly)
 library(ggplot2)
 library(shiny)
+library(reshape2)
+library(data.table)
 
-data <- read.csv("Something")
-clean.data <- data %>% filter()
+Allegheny.County.Jail.2018.raw <- read.csv("~/GitHub/Homework_2/7f5da957-01b5-4187-a842-3f215d30d7e8.csv")
+clean.data <- subset(Allegheny.County.Jail.2018.raw, select = -X_id) %>% na.omit(clean.data)
+levels(clean.data$Gender) <- c("Female", "Male")
+levels(clean.data$Race) <- c("Not Reported", "Asian", "Black", "Hispanic", "Indian", "Unknown", "White", "Mixed-race")
 
-# Define UI for application that draws a histogram
+
+# Define UI for application using a fluid page layout
 ui <- fluidPage(
+          
+   # Application title is
    
-   # Application title
-   titlePanel(""),
-   
-   # Sidebar with a slider input for number of bins 
-   
-      
-      # Show a plot of the generated distribution
-      mainPanel(
-         plotOutput("distPlot")
+  titlePanel("Allegheny County Jail Bookings for September "),
+      tabsetPanel(
+         tabPanel("Gender Information",
+                  fluidRow(
+                    column(4,
+                           wellPanel(checkboxGroupInput("practice", label = "Options", choices = c("Female", "Male")))),
+                    column(8, wellPanel(plotOutput("gender.info"))))),
+         tabPanel("Race",
+                  fluidRow(
+                    column(4,
+                            wellPanel(checkboxGroupInput("practice2", label = "Race", choices = c("Not Reported", "Asian", "Black",
+                                                                                  "Hispanic", "Indian", "Unknown", 
+                                                                                  "White", "Mixed-race")))))),
+         tabPanel("Downloads and Table",
+                   fluidRow(column(4, wellPanel(downloadButton("new.download", label = "Download New File")))))
       )
-   )
-
+)
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-   
-   
+  ddply(clean.data, ~ Race, summarize, mean = mean(Age.at.Booking))
+  output$gender.info <- renderPlot({ggplotly(Allegheny.County.Jail.2018.raw, aes(x = Gender)) + 
+      geom_bar() + 
+      geom_text(aes())
+  })  
 }
 
 # Run the application 
