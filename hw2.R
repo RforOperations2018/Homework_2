@@ -8,7 +8,7 @@ library(data.table)
 library(DT)
 
 #Data Loading and Cleaning
-Allegheny.County.Jail.2018.raw <- read.csv("~/GitHub/Homework_2/7f5da957-01b5-4187-a842-3f215d30d7e8.csv")
+Allegheny.County.Jail.2018.raw <- read.csv("~/GitHub/Homework_2/downloadfile_hw2.csv")
 clean.data <- subset(Allegheny.County.Jail.2018.raw, select = -X_id) %>% na.omit(clean.data)
 levels(clean.data$Gender) <- c("Female", "Male")
 levels(clean.data$Race) <- c("Not Reported", "Asian", "Black", "Hispanic", "Indian", "Unknown", "White", "Mixed-race")
