@@ -8,7 +8,8 @@ library(data.table)
 library(DT)
 
 #Data Loading and Cleaning
-Allegheny.County.Jail.2018.raw <- read.csv("~/GitHub/Homework_2/7f5da957-01b5-4187-a842-3f215d30d7e8.csv")
+# I had to do this to get it to load FYI, placing a ./ will load it from the Source File directory location, I don't have the same folder structure as you do obviously. This will also make more sense when we start deploying applications
+Allegheny.County.Jail.2018.raw <- read.csv("./7f5da957-01b5-4187-a842-3f215d30d7e8.csv")
 clean.data <- subset(Allegheny.County.Jail.2018.raw, select = -X_id) %>% na.omit(clean.data)
 levels(clean.data$Gender) <- c("Female", "Male")
 levels(clean.data$Race) <- c("Not Reported", "Asian", "Black", "Hispanic", "Indian", "Unknown", "White", "Mixed-race")
@@ -49,8 +50,11 @@ clean.data %>% filter(input$gender == Gender & Race %in% input$race)})
 #Create Interactive Race and Gender Plot  
    output$race.info <- renderPlotly({
     df2 <- df.filter()
-    ggplotly(ggplot(df2, aes(x = Race, fill = Race)) + geom_bar() + ggtitle("Arrests by Race and Gender for September") 
-               + ylab("Total"))})
+    # ggplots are easier to read when each plus starts a new line.
+    ggplotly(ggplot(df2, aes(x = Race, fill = Race)) + 
+               geom_bar() + 
+               ggtitle("Arrests by Race and Gender for September") +
+               ylab("Total"))})
 
 #Create Interactive Gender Plot
   output$gender.info <- renderPlotly({
