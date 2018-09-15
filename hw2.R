@@ -9,7 +9,7 @@ library(DT)
 
 #Data Loading and Cleaning
 # I had to do this to get it to load FYI, placing a ./ will load it from the Source File directory location, I don't have the same folder structure as you do obviously. This will also make more sense when we start deploying applications
-Allegheny.County.Jail.2018.raw <- read.csv("./7f5da957-01b5-4187-a842-3f215d30d7e8.csv")
+Allegheny.County.Jail.2018.raw <- read.csv("./downloadfile_hw2.csv")
 clean.data <- subset(Allegheny.County.Jail.2018.raw, select = -X_id) %>% na.omit(clean.data)
 levels(clean.data$Gender) <- c("Female", "Male")
 levels(clean.data$Race) <- c("Not Reported", "Asian", "Black", "Hispanic", "Indian", "Unknown", "White", "Mixed-race")
