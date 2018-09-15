@@ -19,7 +19,7 @@ ui <- fluidPage(
 # Layout of Basic Input          
   titlePanel("Allegheny County Jail Bookings for September "),
       tabsetPanel(
-        #1st Panel for Gender and Race Information 
+        #1st Panel for Gender and Race Information and Refresh Button
         tabPanel("Basic Information",
                   fluidRow(
                     column(4,
@@ -33,7 +33,7 @@ ui <- fluidPage(
                            wellPanel(actionButton("click", "Click to See What Happens"))),
                    column(8, wellPanel( plotlyOutput("race.info")), 
                              wellPanel(plotlyOutput("gender.info"))))),
-         #2nd Panel for Download Button, Action Button, and Data Table
+         #2nd Panel for Download Button and Data Table
          tabPanel("Downloads and Table",
                    fluidRow(column(4, wellPanel(downloadButton("new.download", label = "Download New File"))),
                             column(8, wellPanel(dataTableOutput("table", width = "80%")))))
@@ -41,40 +41,40 @@ ui <- fluidPage(
 
 
 # Define server logic required to draw two bar graphs, a data table, and a download button
-server <- function(input, output) {
-  
-  df.filter <- reactive ({
-    clean.data %>% filter(input$gender == Gender & Race %in% input$race)})
-   
-   
-   
-
-  output$race.info <- renderPlotly({
+server <- function(input, output, session = session) {
+# create reactive element  
+df.filter <- reactive ({
+clean.data %>% filter(input$gender == Gender & Race %in% input$race)})
+ 
+#Create Interactive Race and Gender Plot  
+   output$race.info <- renderPlotly({
     df2 <- df.filter()
-    ggplotly(ggplot(df2, aes(x = Race, fill = Race)) + geom_bar() + ggtitle("Arrests by Race for September"))})
+    ggplotly(ggplot(df2, aes(x = Race, fill = Race)) + geom_bar() + ggtitle("Arrests by Race and Gender for September") 
+               + ylab("Total"))})
 
+#Create Interactive Gender Plot
   output$gender.info <- renderPlotly({
     df1 <- df.filter()
     ggplotly(ggplot(df1, aes(x = Gender, fill = Gender)) + 
-      geom_bar()+ ggtitle("Arrests by Sex for September"))})
+      geom_bar()+ ggtitle("Arrests by Sex for September") + ylab("Total"))})
   
-      
-  
+#Create Download Button that allows people to download info
   output$new.download <- downloadHandler(
     filename = function(){ 
-      paste("newdownload", Sys.date(), ".csv", sep = "" )},
+      paste("new.download", Sys.Date(), ".csv", sep = "" )},
     content = function(file) {
-      write.csv(df.filter(), file)
+      write.csv(df.filter(), file, row.names = FALSE)
     })
-  
+#Create table  
   output$table <- renderDataTable({
     functioning.table <- df.filter()
     subset(functioning.table, select = c(Date, Gender, Race, Age.at.Booking, Current.Age))
   })
-    observeEvent(input$click, {
-      print(paste("Hey, you clicked a button!"))
-    })
-  
+#Create Refresh Button   
+  observeEvent(input$click, {
+    updateSelectInput(session, "race", selected = c("Black", "White", "Hispanic"))
+    showNotification("You have successfully reset the filters for race", type = "message")
+      })
 }
 
 # Run the application 
