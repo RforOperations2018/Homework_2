@@ -12,11 +12,6 @@ library(plotly)
 library(htmltools)
 
 #Data Loading and Cleaning
-<<<<<<< HEAD
-#file.path()
-=======
-# I had to do this to get it to load FYI, placing a ./ will load it from the Source File directory location, I don't have the same folder structure as you do obviously. This will also make more sense when we start deploying applications
->>>>>>> 3145e5d2353160fbb293bbb4d6c079211376241a
 Allegheny.County.Jail.2018.raw <- read.csv("./downloadfile_hw2.csv")
 clean.data <- subset(Allegheny.County.Jail.2018.raw, select = -X_id) %>% na.omit(clean.data)
 levels(clean.data$Gender) <- c("Female", "Male")
