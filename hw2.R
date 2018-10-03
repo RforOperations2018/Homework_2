@@ -12,7 +12,11 @@ library(plotly)
 library(htmltools)
 
 #Data Loading and Cleaning
+<<<<<<< HEAD
 #file.path()
+=======
+# I had to do this to get it to load FYI, placing a ./ will load it from the Source File directory location, I don't have the same folder structure as you do obviously. This will also make more sense when we start deploying applications
+>>>>>>> 3145e5d2353160fbb293bbb4d6c079211376241a
 Allegheny.County.Jail.2018.raw <- read.csv("./downloadfile_hw2.csv")
 clean.data <- subset(Allegheny.County.Jail.2018.raw, select = -X_id) %>% na.omit(clean.data)
 levels(clean.data$Gender) <- c("Female", "Male")
@@ -54,8 +58,11 @@ clean.data %>% filter(input$gender == Gender & Race %in% input$race)})
 #Create Interactive Race and Gender Plot  
    output$race.info <- renderPlotly({
     df2 <- df.filter()
-    ggplotly(ggplot(df2, aes(x = Race, fill = Race)) + geom_bar() + ggtitle("Arrests by Race and Gender for September") 
-               + ylab("Total"))})
+    # ggplots are easier to read when each plus starts a new line.
+    ggplotly(ggplot(df2, aes(x = Race, fill = Race)) + 
+               geom_bar() + 
+               ggtitle("Arrests by Race and Gender for September") +
+               ylab("Total"))})
 
 #Create Interactive Gender Plot
   output$gender.info <- renderPlotly({
