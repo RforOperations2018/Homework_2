@@ -11,6 +11,7 @@ library(jsonlite)
 library(plotly)
 library(htmltools)
 
+<<<<<<< HEAD
 ## Creation of
 ckansql <- function(url) {
   # Make the Request
@@ -36,6 +37,13 @@ race_choices <- sort(ckan_unique("7f5da957-01b5-4187-a842-3f215d30d7e8", "Race")
 #
 gender_choices <- recode(gender, F = 'Female',  M = 'Male' )
 race_choices <- recode(race_choices, A = "Asian", B = "Black", H = "Hispanic", I = "Indian", U = "Unknown", W = "White", x = "Unreported")
+=======
+#Data Loading and Cleaning
+Allegheny.County.Jail.2018.raw <- read.csv("./downloadfile_hw2.csv")
+clean.data <- subset(Allegheny.County.Jail.2018.raw, select = -X_id) %>% na.omit(clean.data)
+levels(clean.data$Gender) <- c("Female", "Male")
+levels(clean.data$Race) <- c("Not Reported", "Asian", "Black", "Hispanic", "Indian", "Unknown", "White", "Mixed-race")
+>>>>>>> parent of 2c8aa83... Changes made to change actual choices.
 
 
 # Define UI for application using a fluid page layout
@@ -47,11 +55,21 @@ ui <- fluidPage(
         tabPanel("Basic Information",
                   fluidRow(
                     column(4,
+<<<<<<< HEAD
                            wellPanel(selectInput("race", label = "Race", choices = race_choices, 
                                                  selected = c("Black", "White", "Hispanic"),
                                                  multiple = TRUE,
                                                  selectize = TRUE)),
                            wellPanel(radioButtons("gender", label = "Options", choices = gender_choices)),
+=======
+                           wellPanel(selectInput("race", label = "Race", choices = c("Not Reported", "Asian", "Black",
+                                                                                     "Hispanic", "Indian", "Unknown", 
+                                                                                     "White", "Mixed-race"), 
+                                                 selected = c("Black", "White", "Hispanic"),
+                                                 multiple = TRUE,
+                                                 selectize = TRUE)),
+                           wellPanel(radioButtons("gender", label = "Options", choices = c("Male", "Female"))),
+>>>>>>> parent of 2c8aa83... Changes made to change actual choices.
                            wellPanel(actionButton("click", "Click to See What Happens"))),
                    column(8, wellPanel( plotlyOutput("race.info")), 
                              wellPanel(plotlyOutput("gender.info"))))),
@@ -66,6 +84,7 @@ ui <- fluidPage(
 server <- function(input, output, session = session) {
 # create reactive element  
 df.filter <- reactive ({
+<<<<<<< HEAD
 
   #Problem (hypothetical): matching input values, newly recoded, with API data within SQL
   #Option 1 (fail): recode values from user input back to original raw form before API call
@@ -88,6 +107,10 @@ df.filter <- reactive ({
 
 #Create api ask
 ##https://data.wprdc.org/api/3/action/datastore_search_sql
+=======
+clean.data %>% filter(input$gender == Gender & Race %in% input$race)})
+ 
+>>>>>>> parent of 2c8aa83... Changes made to change actual choices.
 #Create Interactive Race and Gender Plot  
    output$race.info <- renderPlotly({
     df2 <- df.filter()
