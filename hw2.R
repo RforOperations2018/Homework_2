@@ -33,13 +33,7 @@ ckanUniques <- function(id, field) {
 gender <- sort(ckanUniques("7f5da957-01b5-4187-a842-3f215d30d7e8", "Gender")$Gender)
 race_choices <- sort(ckanUniques("7f5da957-01b5-4187-a842-3f215d30d7e8", "Race")$Race)
 gender <- recode(gender, F = 'Female',  M = 'Male' )
-#race_choices <- recode(race_choices, )
-#dat311 <-  gender %>% mutate(STATUS = ifelse(STATUS == 1, "Closed", "Open"))
-#Data Loading and Cleaning
-# Allegheny.County.Jail.2018.raw <- read.csv("./downloadfile_hw2.csv")
-# clean.data <- subset(Allegheny.County.Jail.2018.raw, select = -X_id) %>% na.omit(clean.data)
-#levels(clean.data$Gender) <- c("Female", "Male")
-# levels(clean.data$Race) <- c("Not Reported", "Asian", "Black", "Hispanic", "Indian", "Unknown", "White", "Mixed-race")
+race_choices <- recode(race_choices, A = "Asian", B = "Black", H = "Hispanic", I = "Indian", U = "Unknown", W = "White", x = "Not reported")
 
 
 # Define UI for application using a fluid page layout
@@ -52,7 +46,7 @@ ui <- fluidPage(
                   fluidRow(
                     column(4,
                            wellPanel(selectInput("race", label = "Race", choices = race_choices, 
-                                                 #selected = c("Black", "White", "Hispanic"),
+                                                 selected = c("Black", "White", "Hispanic"),
                                                  multiple = TRUE,
                                                  selectize = TRUE)),
                            wellPanel(radioButtons("gender", label = "Options", choices = gender)),
@@ -70,7 +64,18 @@ ui <- fluidPage(
 server <- function(input, output, session = session) {
 # create reactive element  
 df.filter <- reactive ({
-clean.data %>% filter(input$gender == Gender & Race %in% input$race)})
+
+  url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20*%20FROM%20%227f5da957-01b5-4187-a842-3f215d30d7e8%22%20WHERE%20%27", 
+            input$gender ,"%27%20=%20%22Gender%22%20AND%20%22Race%22%20IN%20%27", 
+           input$Race, "%27%20")
+  
+  # Load and clean data
+  clean.data <- ckanSQL(url) %>%
+    mutate(Gender = ifelse(STATUS == 1, "Female", "Male"), Race = ifelse(STATUS == 1, "Asian, Black", "Hispanic"))
+  
+  return(dat311)
+  #clean.data %>% filter(input$gender == Gender & Race %in% input$race)
+  })
 
 #Create api ask
 ##https://data.wprdc.org/api/3/action/datastore_search_sql
@@ -103,7 +108,7 @@ clean.data %>% filter(input$gender == Gender & Race %in% input$race)})
   })
 #Create Refresh Button   
   observeEvent(input$click, {
-    updateSelectInput(session, "race", selected = c("Black", "White", "Hispanic"))
+    updateSelectInput(session, "race", selected = c("Black", "Hispanic", "White"))
     showNotification("You have successfully reset the filters for race", type = "message")
       })
 }
