@@ -11,11 +11,35 @@ library(jsonlite)
 library(plotly)
 library(htmltools)
 
+## Creation of
+ckanSQL <- function(url) {
+  # Make the Request
+  r <- RETRY("GET", URLencode(url))
+  # Extract Content
+  c <- content(r, "text")
+  # Basic gsub to make NA's consistent with R
+  json <- gsub('NaN', 'NA', c, perl = TRUE)
+  # Create Dataframe
+  data.frame(jsonlite::fromJSON(json)$result$records)
+}
+#https://data.wprdc.org/datastore/dump/7f5da957-01b5-4187-a842-3f215d30d7e8
+# Unique values for Resource Field
+ckanUniques <- function(id, field) {
+  url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20DISTINCT(%22", field, "%22)%20from%20%22", id, "%22")
+  c(ckanSQL(URLencode(url)))
+}
+
+
+gender <- sort(ckanUniques("7f5da957-01b5-4187-a842-3f215d30d7e8", "Gender")$Gender)
+race_choices <- sort(ckanUniques("7f5da957-01b5-4187-a842-3f215d30d7e8", "Race")$Race)
+gender <- recode(gender, F = 'Female',  M = 'Male' )
+#race_choices <- recode(race_choices, )
+#dat311 <-  gender %>% mutate(STATUS = ifelse(STATUS == 1, "Closed", "Open"))
 #Data Loading and Cleaning
-Allegheny.County.Jail.2018.raw <- read.csv("./downloadfile_hw2.csv")
-clean.data <- subset(Allegheny.County.Jail.2018.raw, select = -X_id) %>% na.omit(clean.data)
-levels(clean.data$Gender) <- c("Female", "Male")
-levels(clean.data$Race) <- c("Not Reported", "Asian", "Black", "Hispanic", "Indian", "Unknown", "White", "Mixed-race")
+# Allegheny.County.Jail.2018.raw <- read.csv("./downloadfile_hw2.csv")
+# clean.data <- subset(Allegheny.County.Jail.2018.raw, select = -X_id) %>% na.omit(clean.data)
+#levels(clean.data$Gender) <- c("Female", "Male")
+# levels(clean.data$Race) <- c("Not Reported", "Asian", "Black", "Hispanic", "Indian", "Unknown", "White", "Mixed-race")
 
 
 # Define UI for application using a fluid page layout
@@ -27,13 +51,11 @@ ui <- fluidPage(
         tabPanel("Basic Information",
                   fluidRow(
                     column(4,
-                           wellPanel(selectInput("race", label = "Race", choices = c("Not Reported", "Asian", "Black",
-                                                                                     "Hispanic", "Indian", "Unknown", 
-                                                                                     "White", "Mixed-race"), 
-                                                 selected = c("Black", "White", "Hispanic"),
+                           wellPanel(selectInput("race", label = "Race", choices = race_choices, 
+                                                 #selected = c("Black", "White", "Hispanic"),
                                                  multiple = TRUE,
                                                  selectize = TRUE)),
-                           wellPanel(radioButtons("gender", label = "Options", choices = c("Male", "Female"))),
+                           wellPanel(radioButtons("gender", label = "Options", choices = gender)),
                            wellPanel(actionButton("click", "Click to See What Happens"))),
                    column(8, wellPanel( plotlyOutput("race.info")), 
                              wellPanel(plotlyOutput("gender.info"))))),
@@ -49,7 +71,9 @@ server <- function(input, output, session = session) {
 # create reactive element  
 df.filter <- reactive ({
 clean.data %>% filter(input$gender == Gender & Race %in% input$race)})
- 
+
+#Create api ask
+##https://data.wprdc.org/api/3/action/datastore_search_sql
 #Create Interactive Race and Gender Plot  
    output$race.info <- renderPlotly({
     df2 <- df.filter()
