@@ -12,7 +12,7 @@ library(plotly)
 library(htmltools)
 
 ## Creation of
-ckanSQL <- function(url) {
+ckansql <- function(url) {
   # Make the Request
   r <- RETRY("GET", URLencode(url))
   # Extract Content
@@ -24,16 +24,18 @@ ckanSQL <- function(url) {
 }
 #https://data.wprdc.org/datastore/dump/7f5da957-01b5-4187-a842-3f215d30d7e8
 # Unique values for Resource Field
-ckanUniques <- function(id, field) {
+ckan_unique <- function(id, field) {
   url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20DISTINCT(%22", field, "%22)%20from%20%22", id, "%22")
-  c(ckanSQL(URLencode(url)))
+  c(ckansql(URLencode(url)))
 }
 
 
-gender <- sort(ckanUniques("7f5da957-01b5-4187-a842-3f215d30d7e8", "Gender")$Gender)
-race_choices <- sort(ckanUniques("7f5da957-01b5-4187-a842-3f215d30d7e8", "Race")$Race)
-gender <- recode(gender, F = 'Female',  M = 'Male' )
-race_choices <- recode(race_choices, A = "Asian", B = "Black", H = "Hispanic", I = "Indian", U = "Unknown", W = "White", x = "Not reported")
+gender_choices <- sort(ckan_unique("7f5da957-01b5-4187-a842-3f215d30d7e8", "Gender")$Gender)
+race_choices <- sort(ckan_unique("7f5da957-01b5-4187-a842-3f215d30d7e8", "Race")$Race)
+#gender <- mutate(gender, )
+#
+gender_choices <- recode(gender, F = 'Female',  M = 'Male' )
+race_choices <- recode(race_choices, A = "Asian", B = "Black", H = "Hispanic", I = "Indian", U = "Unknown", W = "White", x = "Unreported")
 
 
 # Define UI for application using a fluid page layout
@@ -49,7 +51,7 @@ ui <- fluidPage(
                                                  selected = c("Black", "White", "Hispanic"),
                                                  multiple = TRUE,
                                                  selectize = TRUE)),
-                           wellPanel(radioButtons("gender", label = "Options", choices = gender)),
+                           wellPanel(radioButtons("gender", label = "Options", choices = gender_choices)),
                            wellPanel(actionButton("click", "Click to See What Happens"))),
                    column(8, wellPanel( plotlyOutput("race.info")), 
                              wellPanel(plotlyOutput("gender.info"))))),
@@ -65,15 +67,22 @@ server <- function(input, output, session = session) {
 # create reactive element  
 df.filter <- reactive ({
 
+  #Problem (hypothetical): matching input values, newly recoded, with API data within SQL
+  #Option 1 (fail): recode values from user input back to original raw form before API call
+  #Option 2 (fail): recode values from user input within url assignment
+  #Gender <- recode(input$gender, Female = "F", Male = "M")
+  #Race <- recode(input$race, Asian = "A", Black = "B", Hispanic = "H", Indian = "I", Unknown = "U", White  = "W", Unreported = "x")
+  #Option 1: Recode inputs as original values to 
+  
   url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20*%20FROM%20%227f5da957-01b5-4187-a842-3f215d30d7e8%22%20WHERE%20%27", 
             input$gender ,"%27%20=%20%22Gender%22%20AND%20%22Race%22%20IN%20%27", 
-           input$Race, "%27%20")
+           input$race, "%27%20")
   
   # Load and clean data
-  clean.data <- ckanSQL(url) %>%
-    mutate(Gender = ifelse(STATUS == 1, "Female", "Male"), Race = ifelse(STATUS == 1, "Asian, Black", "Hispanic"))
+  clean.data <- ckansql(url) #%>%
+  #  mutate(Gender = ifelse(Gender == "F", "Female", "Male"), Race = recode( A = "Asian", B = "Black", H = "Hispanic", I = "Indian", U = "Unknown", W = "White", x = "Not reported"))
   
-  return(dat311)
+  return(clean.data)
   #clean.data %>% filter(input$gender == Gender & Race %in% input$race)
   })
 
