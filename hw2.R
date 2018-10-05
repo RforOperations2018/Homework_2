@@ -46,17 +46,10 @@ ui <- fluidPage(
                   fluidRow(
                     column(4,
 
-                           wellPanel(selectInput("race", label = "Race", 
-                                                 choices = list('Asian' = 'A',
-                                                                 'Black' = 'B',
-                                                                  'Hispanic' = 'H',
-                                                                    'Indian' = 'I',
-                                                                     'Unknwon' = 'U',
-                                                                     'White' = 'W',
-                                                                     'Unreported' = 'x'),
-                                                 selected = c("A"),
-                                                 multiple = FALSE,
-                                                 selectize = TRUE)),
+                           wellPanel(radioButtons("race", label = "Race", 
+                                                 choiceNames = c('Asian' , 'Black','Hispanic','Indian','Unknown','White','Unreported'),
+                                                 choiceValues = c("A", "B", "H", "I", "U", "W", "x")
+                                                 )),
                            wellPanel(radioButtons("gender", label = "Options", choiceNames = c("Female", "Male"), choiceValues = c("F", "M"))),
                            wellPanel(actionButton("click", "Click to See What Happens"))),
                    column(8, wellPanel( plotlyOutput("race.info")), 
@@ -72,7 +65,7 @@ server <- function(input, output, session = session) {
 # create reactive element  
 df.filter <- reactive ({
    url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20*%20FROM%20%227f5da957-01b5-4187-a842-3f215d30d7e8%22%20WHERE%20%22Gender%22%20=%20%27", 
-                input$gender,"%27") # Commented out for testing %20AND%20%22Race%22%20%3D%20%27", input$race, "%27%20")
+                input$gender,"%27%20AND%20%22Race%22%20%3D%20%27", input$race, "%27%20")
      # use ckan on url and make clean data
   clean.data <- ckanSQL(url) %>% na.omit() %>%
     # Revalue the Race Column
