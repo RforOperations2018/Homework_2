@@ -106,7 +106,8 @@ df.filter <- reactive ({
   })
 #Create Refresh Button   
   observeEvent(input$click, {
-    updateRadioButtons(session, "race", selected = c("Black", "Hispanic", "White"))
+    updateRadioButtons(session, "race", selected = 'A')
+    updateRadioButtons(session, "gender", selected = 'F')
     showNotification("You have successfully reset the filters for race", type = "message")
       })
 }
