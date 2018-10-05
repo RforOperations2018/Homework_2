@@ -11,7 +11,6 @@ library(jsonlite)
 library(plotly)
 library(htmltools)
 
-
 ## Creation of
 ckanSQL <- function(url) {
   # Make the Request
@@ -34,9 +33,8 @@ gender_choices <- sort(ckanUnique("7f5da957-01b5-4187-a842-3f215d30d7e8", "Gende
 race_choices <- sort(ckanUnique("7f5da957-01b5-4187-a842-3f215d30d7e8", "Race")$Race)
 #gender <- mutate(gender, )
 #Relabel choices of gender and race (input in user interface)
-gender_choices <- recode(gender_choices, F = 'Female',  M = 'Male' )
-race_choices <- recode(race_choices, A = "Asian", B = "Black", H = "Hispanic", I = "Indian", U = "Unknown", W = "White", x = "Unreported")
-
+# Moved gender choice refactoring to the reactive function
+ race_choices <- recode(race_choices, A = "Asian", B = "Black", H = "Hispanic", I = "Indian", U = "Unknown", W = "White", x = "Unreported")
 
 # Define UI for application using a fluid page layout
 ui <- fluidPage(
@@ -59,7 +57,7 @@ ui <- fluidPage(
                                                  selected = c("A"),
                                                  multiple = FALSE,
                                                  selectize = TRUE)),
-                           wellPanel(radioButtons("gender", label = "Options", choices = gender_choices, choiceValues = c("F", "M"))),
+                           wellPanel(radioButtons("gender", label = "Options", choiceNames = c("Female", "Male"), choiceValues = c("F", "M"))),
                            wellPanel(actionButton("click", "Click to See What Happens"))),
                    column(8, wellPanel( plotlyOutput("race.info")), 
                              wellPanel(plotlyOutput("gender.info"))))),
@@ -73,26 +71,32 @@ ui <- fluidPage(
 server <- function(input, output, session = session) {
 # create reactive element  
 df.filter <- reactive ({
-   url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20*%20FROM%20%227f5da957-01b5-4187-a842-3f215d30d7e8%22%20WHERE%20%22Gender%22%20%3D%20%27", 
-                input$gender,"%27%20AND%20%22Race%22%20%3D%20%27", input$race, "%27%20")
+   url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20*%20FROM%20%227f5da957-01b5-4187-a842-3f215d30d7e8%22%20WHERE%20%22Gender%22%20=%20%27", 
+                input$gender,"%27") # Commented out for testing %20AND%20%22Race%22%20%3D%20%27", input$race, "%27%20")
      # use ckan on url and make clean data
-  clean.data <- ckanSQL(url) %>% na.omit() 
+  clean.data <- ckanSQL(url) %>% na.omit() %>%
+    # Revalue the Race Column
+   mutate(Gender = plyr::revalue(Gender,  c("F" = 'Female',  "M" = 'Male'))
+          )
+  
   #clean.data <- recode(clean.data$race , A = "Asian", B = "Black", H = "Hispanic", I = "Indian", U = "Unknown", W = "White", x = "Not reported")mutate(Gender = ifelse(Gender == "F", "Female", "Male"), Race = recode( A = "Asian", B = "Black", H = "Hispanic", I = "Indian", U = "Unknown", W = "White", x = "Not reported"))
   #clean.data %>% filter(input$gender == Gender & Race %in% input$race)
+  print(colnames(clean.data))
   return(clean.data)
    })
 #Create Interactive Race and Gender Plot  
    output$race.info <- renderPlotly({
     df2 <- df.filter()
     # ggplots are easier to read when each plus starts a new line.
-    ggplotly(ggplot(df2, aes(x = Race , fill = Race)) + 
+    ggplotly(ggplot(data = df2, aes(x = Race , fill = Race)) + 
                geom_bar() + 
                ggtitle("Arrests by Race and Gender for September") +
-               ylab("Total"))})
+               ylab("Total"))
+    })
 #Create Interactive Gender Plot
   output$gender.info <- renderPlotly({
     df1 <- df.filter()
-    ggplotly(ggplot(df1, aes(x = Gender, fill = Gender)) + 
+    ggplotly(ggplot(data = df1, aes(x = Gender, fill = Gender)) + 
       geom_bar()+ ggtitle("Arrests by Sex for September") + ylab("Total"))})
 #Create Download Button that allows people to download info
   output$new.download <- downloadHandler(
