@@ -22,16 +22,15 @@ ckanSQL <- function(url) {
   # Create Dataframe
   data.frame(jsonlite::fromJSON(json)$result$records)
 }
-#https://data.wprdc.org/datastore/dump/7f5da957-01b5-4187-a842-3f215d30d7e8
 # Unique values for Resource Field
 ckanUnique <- function(id, field) {
   url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20DISTINCT(%22", field, "%22)%20from%20%22", id, "%22")
   c(ckanSQL(URLencode(url)))
 }
-#Create choices for fields of race and Gender
+#Create choices for fields of Race and Gender
 gender_choices <- sort(ckanUnique("7f5da957-01b5-4187-a842-3f215d30d7e8", "Gender")$Gender)
 race_choices <- sort(ckanUnique("7f5da957-01b5-4187-a842-3f215d30d7e8", "Race")$Race)
-#gender <- mutate(gender, )
+
 #Relabel choices of gender and race (input in user interface)
 # Moved gender choice refactoring to the reactive function
  race_choices <- recode(race_choices, A = "Asian", B = "Black", H = "Hispanic", I = "Indian", U = "Unknown", W = "White", x = "Unreported")
@@ -68,12 +67,9 @@ df.filter <- reactive ({
                 input$gender,"%27%20AND%20%22Race%22%20%3D%20%27", input$race, "%27%20")
      # use ckan on url and make clean data
   clean.data <- ckanSQL(url) %>% na.omit() %>%
-    # Revalue the Race Column
    mutate(Gender = plyr::revalue(Gender,  c("F" = 'Female',  "M" = 'Male'))
-          )
-  
-  #clean.data <- recode(clean.data$race , A = "Asian", B = "Black", H = "Hispanic", I = "Indian", U = "Unknown", W = "White", x = "Not reported")mutate(Gender = ifelse(Gender == "F", "Female", "Male"), Race = recode( A = "Asian", B = "Black", H = "Hispanic", I = "Indian", U = "Unknown", W = "White", x = "Not reported"))
-  #clean.data %>% filter(input$gender == Gender & Race %in% input$race)
+          ) %>%
+  mutate(Race = plyr::revalue(Race,  c("A" = 'Asian',  "B" = 'Black', "H" = 'Hispanic', "I" = 'Indian', "U" = 'Unknown', "W" = 'White', "x" = 'Unreported')))
   print(colnames(clean.data))
   return(clean.data)
    })
@@ -84,13 +80,18 @@ df.filter <- reactive ({
     ggplotly(ggplot(data = df2, aes(x = Race , fill = Race)) + 
                geom_bar() + 
                ggtitle("Arrests by Race and Gender for September") +
+               scale_fill_manual(values = c("Asian" = "green", "White" = "orange", 
+                                            "Black" = "purple", "Hispanic" = "yellow",
+                                            "Indian" = "pink", "Unreported" = "red",
+                                            "Unknown" = "grey")) +
                ylab("Total"))
-    })
+    }) 
 #Create Interactive Gender Plot
   output$gender.info <- renderPlotly({
     df1 <- df.filter()
     ggplotly(ggplot(data = df1, aes(x = Gender, fill = Gender)) + 
-      geom_bar()+ ggtitle("Arrests by Sex for September") + ylab("Total"))})
+      geom_bar()+ ggtitle("Arrests by Sex for September") +  scale_fill_manual (values = c("Female" = "blue", "Male" = "brown")) + 
+        ylab("Total"))})
 #Create Download Button that allows people to download info
   output$new.download <- downloadHandler(
     filename = function(){ 
