@@ -63,6 +63,7 @@ ui <- fluidPage(
 server <- function(input, output, session = session) {
 # create reactive element  
 df.filter <- reactive ({
+  # FYI, you can use an IN statement instead of equals for any api calls where you would otherwise let folks select multiple things. https://www.w3schools.com/sql/sql_in.asp
    url <- paste0("https://data.wprdc.org/api/action/datastore_search_sql?sql=SELECT%20*%20FROM%20%227f5da957-01b5-4187-a842-3f215d30d7e8%22%20WHERE%20%22Gender%22%20=%20%27", 
                 input$gender,"%27%20AND%20%22Race%22%20%3D%20%27", input$race, "%27%20")
      # use ckan on url and make clean data
@@ -108,6 +109,7 @@ df.filter <- reactive ({
   observeEvent(input$click, {
     updateRadioButtons(session, "race", selected = 'A')
     updateRadioButtons(session, "gender", selected = 'F')
+    # This resets both filters, not just race. A few pts off in UI.
     showNotification("You have successfully reset the filters for race", type = "message")
       })
 }
